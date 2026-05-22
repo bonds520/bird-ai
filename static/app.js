@@ -248,13 +248,14 @@ async function submitFile(endpoint, file) {
   try {
     const res = await fetch(endpoint, { method: "POST", body: form });
     const data = await res.json();
+    setLoading(false);
+    document.getElementById(`panel-${state.tab}`).style.display = "";
     if (!res.ok) showError(parseErrorMessage(res.status, data.detail || ""));
     else renderResult(data);
   } catch {
-    showError(t("err_server"));
-  } finally {
     setLoading(false);
     document.getElementById(`panel-${state.tab}`).style.display = "";
+    showError(t("err_server"));
   }
 }
 
