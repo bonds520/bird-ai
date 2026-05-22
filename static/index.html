@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="app_title">鳥類辨識系統</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🦜</span>
+        <h1 data-i18n="app_title">鳥類辨識系統</h1>
+      </div>
+      <div class="header-controls">
+        <select id="model-select" class="model-select" title="選擇 AI 模型">
+          <option value="">載入模型中…</option>
+        </select>
+        <button id="lang-toggle" class="lang-btn" aria-label="切換語言">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="image" role="tab" aria-selected="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+        <span data-i18n="tab_image">圖片辨識</span>
+      </button>
+      <button class="tab" data-tab="audio" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span data-i18n="tab_audio">鳴聲辨識</span>
+      </button>
+      <button class="tab" data-tab="records" role="tab" aria-selected="false">
+        <span style="font-size:1.05rem;line-height:1">📔</span>
+        <span data-i18n="tab_records">記錄</span>
+      </button>
+      <button class="tab" data-tab="batch" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>批次篩選</span>
+      </button>
+    </nav>
+
+    <!-- 圖片辨識面板 -->
+    <section id="panel-image" class="panel active" role="tabpanel">
+      <div class="drop-zone" id="image-drop" tabindex="0" role="button" aria-label="上傳圖片區域">
+        <input type="file" id="image-input" accept=".jpg,.jpeg,.png,.webp,.gif,.cr2,.cr3,.nef,.arw,.orf,.rw2,.dng,.raf,.pef,.raw" hidden>
+        <img id="image-preview" hidden alt="預覽圖片">
+        <div class="drop-placeholder" id="image-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          <p data-i18n="image_prompt">拖曳或點選上傳鳥類圖片</p>
+          <span class="drop-hint" data-i18n="image_hint">支援 JPG、PNG、WebP、RAW（CR2/NEF/ARW…），上限 100MB</span>
+        </div>
+      </div>
+      <button id="image-submit" class="btn-primary" data-i18n="btn_identify" disabled>開始辨識</button>
+    </section>
+
+    <!-- 音訊辨識面板 -->
+    <section id="panel-audio" class="panel" role="tabpanel">
+      <div class="drop-zone" id="audio-drop" tabindex="0" role="button" aria-label="上傳音訊區域">
+        <input type="file" id="audio-input" accept=".mp3,.wav,.ogg,.flac,.m4a" hidden>
+        <div class="drop-placeholder" id="audio-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <p data-i18n="audio_prompt">拖曳或點選上傳鳥鳴音檔</p>
+          <span class="drop-hint" data-i18n="audio_hint">支援 MP3、WAV、OGG、FLAC、M4A，上限 100MB</span>
+        </div>
+        <div class="audio-selected" id="audio-selected" hidden>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <span id="audio-filename"></span>
+        </div>
+      </div>
+      <button id="audio-submit" class="btn-primary" data-i18n="btn_identify" disabled>開始辨識</button>
+    </section>
+
+    <!-- 記錄面板 -->
+    <section id="panel-records" class="panel" role="tabpanel">
+      <div class="records-toolbar">
+        <input type="search" id="records-search" class="records-search-input"
+               data-i18n-placeholder="records_search_placeholder" placeholder="搜尋物種名稱…">
+        <input type="date" id="records-date-from" class="records-date-input" title="起始日期">
+        <input type="date" id="records-date-to" class="records-date-input" title="結束日期">
+      </div>
+      <div id="records-list"></div>
+      <div id="records-empty" class="records-empty" hidden>
+        <span style="font-size:3rem">🐦</span>
+        <p data-i18n="records_empty_title">尚無觀察紀錄</p>
+        <p class="records-empty-sub" data-i18n="records_empty_sub">辨識後點選儲存，就會出現在這裡</p>
+      </div>
+      <button id="records-load-more" class="btn-secondary records-load-more" hidden
+              data-i18n="records_load_more">載入更多</button>
+    </section>
+
+    <!-- 批次篩選面板 -->
+    <section id="panel-batch" class="panel" role="tabpanel">
+
+      <!-- 路徑設定 -->
+      <div class="batch-card">
+        <h3 class="batch-card-title">📁 路徑設定</h3>
+        <div class="batch-field-group">
+          <label class="batch-label">來源資料夾</label>
+          <div class="batch-path-row">
+            <input type="text" id="batch-src" class="batch-input" placeholder="例：C:\Photos\Wildlife">
+            <button id="batch-src-verify" class="btn-verify">驗證</button>
+          </div>
+          <span id="batch-src-hint" class="batch-hint"></span>
+        </div>
+        <div class="batch-field-group">
+          <label class="batch-label">目的資料夾 <span class="batch-hint-inline">（不存在時自動建立）</span></label>
+          <input type="text" id="batch-dst" class="batch-input" placeholder="例：C:\Photos\Selected">
+        </div>
+        <div class="batch-action-row">
+          <span class="batch-label">操作</span>
+          <label class="batch-radio"><input type="radio" name="batch-action" value="copy" checked> 複製</label>
+          <label class="batch-radio"><input type="radio" name="batch-action" value="move"> 移動</label>
+        </div>
+      </div>
+
+      <!-- 篩選條件 -->
+      <div class="batch-card">
+        <h3 class="batch-card-title">🔍 篩選條件</h3>
+        <div class="batch-field-group">
+          <div class="batch-slider-header">
+            <label class="batch-label">AI 主題判斷</label>
+            <label class="batch-toggle-label">
+              <input type="checkbox" id="batch-theme-enabled">
+              <span>啟用</span>
+            </label>
+          </div>
+          <input type="text" id="batch-theme" class="batch-input batch-theme-disabled"
+                 placeholder="例：鳥類、松鼠、蜻蜓、貓咪" disabled>
+          <span class="batch-hint batch-ai-warning" hidden>
+            ⚠️ 每張照片需呼叫一次 Vision AI（約 30 秒～數分鐘），張數多時耗時極長。<br>
+            建議先用品質篩選取得結果，再視需要啟用 AI。
+          </span>
+          <span class="batch-hint" id="batch-theme-off-hint">✅ 快速模式：僅做品質篩選，不呼叫 AI</span>
+        </div>
+        <div class="batch-field-group">
+          <div class="batch-slider-header">
+            <label class="batch-label">整體模糊門檻</label>
+            <span class="batch-slider-val" id="blur-display">100</span>
+          </div>
+          <input type="range" id="batch-blur" class="batch-slider" min="0" max="1000" value="100" step="10">
+          <span class="batch-hint">低於此值視為模糊照片（值越高篩選越嚴格）</span>
+        </div>
+        <div class="batch-field-group">
+          <div class="batch-slider-header">
+            <label class="batch-label">主體對焦門檻</label>
+            <span class="batch-slider-val" id="focus-display">100</span>
+          </div>
+          <input type="range" id="batch-focus" class="batch-slider" min="0" max="1000" value="100" step="10">
+          <span class="batch-hint">偵測指定範圍內的銳利度（值越高要求越高）</span>
+        </div>
+        <div class="batch-field-group">
+          <div class="batch-slider-header">
+            <label class="batch-label">主體偵測範圍</label>
+            <span class="batch-slider-val" id="center-display">70%</span>
+          </div>
+          <input type="range" id="batch-center" class="batch-slider" min="20" max="100" value="70" step="5">
+          <span class="batch-hint">以畫面中心為基準，偵測此比例的區域（飛鳥建議 70～100%）</span>
+        </div>
+      </div>
+
+      <!-- 執行 -->
+      <div class="batch-run-row">
+        <button id="batch-start-btn" class="btn-primary">開始篩選</button>
+        <button id="batch-cancel-btn" class="btn-secondary" hidden>中止</button>
+      </div>
+
+      <!-- 進度 -->
+      <div id="batch-progress-section" hidden>
+        <div class="batch-progress-wrap">
+          <div id="batch-progress-bar" class="batch-progress-bar" style="width:0%"></div>
+        </div>
+        <p id="batch-progress-label" class="batch-hint" style="text-align:center;margin-top:0.5rem">正在準備…</p>
+      </div>
+
+      <!-- 結果 -->
+      <div id="batch-result-section" hidden>
+        <div class="batch-summary-row">
+          <div class="batch-sum-chip">共 <b id="bs-total">0</b> 張</div>
+          <div class="batch-sum-chip pass">✅ 通過 <b id="bs-pass">0</b></div>
+          <div class="batch-sum-chip fail">❌ 拒絕 <b id="bs-fail">0</b></div>
+          <button id="batch-export-btn" class="btn-verify" style="margin-left:auto">匯出 CSV</button>
+        </div>
+        <div class="batch-filter-tabs">
+          <button class="batch-ftab active" data-filter="all">全部</button>
+          <button class="batch-ftab" data-filter="pass">通過</button>
+          <button class="batch-ftab" data-filter="fail">拒絕</button>
+        </div>
+        <div id="batch-log-list"></div>
+      </div>
+
+    </section>
+
+    <!-- 載入中 -->
+    <div id="loading" hidden>
+      <div class="spinner"></div>
+      <p data-i18n="loading_text">辨識中，請稍候…</p>
+    </div>
+
+    <!-- 結果卡片 -->
+    <section id="results" hidden>
+      <div class="result-card">
+        <div class="result-header">
+          <div class="species-names">
+            <h2 id="res-zh-name"></h2>
+            <h3 id="res-en-name"></h3>
+            <p id="res-scientific"></p>
+          </div>
+          <div class="source-badge" id="res-source-badge"></div>
+        </div>
+
+        <div class="confidence-section">
+          <div class="confidence-label">
+            <span data-i18n="label_confidence">信心度</span>
+            <span id="conf-pct"></span>
+          </div>
+          <div class="confidence-bar-bg">
+            <div class="confidence-bar-fill" id="conf-fill"></div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong data-i18n="label_habitat">棲地</strong>
+            <p id="res-habitat"></p>
+          </div>
+          <div class="detail-item">
+            <strong data-i18n="label_distribution">分布</strong>
+            <p id="res-distribution"></p>
+          </div>
+        </div>
+
+        <div id="birdnet-extras" hidden>
+          <h4 data-i18n="label_other_detections">其他可能物種</h4>
+          <ul id="other-detections-list"></ul>
+        </div>
+
+        <!-- 更正按鈕 -->
+        <div class="correct-row">
+          <button id="correct-btn" class="correct-trigger-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span data-i18n="correct_btn">辨識有誤？點此更正</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 更正面板 -->
+      <div id="correct-panel" class="correct-panel">
+        <div class="correct-panel-header">
+          <span>🔍</span>
+          <span data-i18n="correct_title">搜尋相似鳥種</span>
+          <button id="correct-close-btn" class="correct-close-btn" aria-label="關閉">✕</button>
+        </div>
+        <p class="correct-current" id="correct-current-species"></p>
+        <div id="correct-loading" class="correct-loading" hidden>
+          <div class="spinner" style="width:28px;height:28px;border-width:3px"></div>
+          <span data-i18n="correct_loading">正在詢問 AI 並搜尋網路資料…</span>
+        </div>
+        <div id="correct-grid" class="correct-grid"></div>
+        <div id="correct-confirm-bar" class="correct-confirm-bar" hidden>
+          <span id="correct-selected-name"></span>
+          <button id="correct-confirm-btn" class="btn-primary correct-confirm-btn"
+                  data-i18n="correct_confirm">確認更正</button>
+        </div>
+      </div>
+
+      <!-- 儲存提示（辨識成功後展開） -->
+      <div id="save-prompt" class="save-prompt">
+        <div class="save-prompt-header">
+          <span>📔</span>
+          <span data-i18n="save_prompt_title">儲存至記錄？</span>
+        </div>
+        <div class="save-prompt-body">
+          <div class="save-date-row">
+            <label data-i18n="save_today_label">是否今日拍攝？</label>
+            <div class="save-date-options">
+              <button id="save-date-today" class="save-date-btn active" data-i18n="save_yes_today">是，今天</button>
+              <button id="save-date-other" class="save-date-btn" data-i18n="save_other_date">選擇其他日期</button>
+            </div>
+          </div>
+          <input type="date" id="save-custom-date" class="records-date-input" hidden>
+          <textarea id="save-notes" class="save-notes-input" rows="2"
+                    data-i18n-placeholder="save_notes_placeholder"
+                    placeholder="備註（地點、行為…）" maxlength="200"></textarea>
+          <p id="save-gps-hint" class="save-gps-hint" hidden></p>
+          <div class="save-actions">
+            <button id="save-confirm-btn" class="btn-primary save-confirm-btn"
+                    data-i18n="save_confirm">儲存</button>
+            <button id="save-cancel-btn" class="btn-secondary"
+                    data-i18n="save_cancel">略過</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="reset-btn" class="btn-secondary" data-i18n="btn_reset">重新上傳</button>
+    </section>
+
+    <!-- 錯誤訊息 -->
+    <div id="error-box" class="error-box" hidden>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p id="error-message"></p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Powered by <span id="footer-model">Vision AI</span> &amp; <span>BirdNET</span></p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
