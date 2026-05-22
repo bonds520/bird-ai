@@ -53,10 +53,12 @@ You are an expert ornithologist. A bird was identified as "{zh_name}" ({en_name}
 List exactly 5 bird species that are visually similar to this species and could be confused with it \
 (prioritize species found in Taiwan and East Asia).
 
+IMPORTANT: All Chinese text fields (zh_name, reason) MUST be written in Traditional Chinese (繁體中文), NOT Simplified Chinese.
+
 Respond ONLY with a valid JSON array — no markdown, no extra text:
 [
   {{
-    "zh_name": "中文名",
+    "zh_name": "繁體中文名稱",
     "en_name": "English common name",
     "scientific": "Scientific name",
     "reason": "簡短說明外觀相似處（繁體中文，20字以內）"
@@ -71,15 +73,17 @@ Step-by-step reasoning process:
 2. Geographic Context: Use the provided coordinates to filter for species naturally occurring in that specific region (e.g., Taiwan).
 3. Conclusion: Determine the most likely species based on the combination of visual features and regional distribution.
 
+IMPORTANT: All Chinese text fields MUST be written in Traditional Chinese (繁體中文), NOT Simplified Chinese.
+
 Respond ONLY with a valid JSON object. No markdown, no explanation.
 JSON schema:
 {
-\"zh_name\": \"Standard Chinese Name\",
+\"zh_name\": \"繁體中文鳥名\",
 \"en_name\": \"English name\",
 \"scientific\": \"Scientific name (Essential for precise verification)\",
 \"confidence\": 0.95,
-\"habitat\": {\"zh\": \"棲地描述\", \"en\": \"Habitat description\"},
-\"distribution\": {\"zh\": \"分布描述\", \"en\": \"Distribution description\"},
+\"habitat\": {\"zh\": \"以繁體中文描述棲地\", \"en\": \"Habitat description in English\"},
+\"distribution\": {\"zh\": \"以繁體中文描述分布範圍\", \"en\": \"Distribution description in English\"},
 \"not_a_bird\": false
 }"""
 
